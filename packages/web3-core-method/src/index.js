@@ -547,22 +547,12 @@ Method.prototype._confirmTransaction = function (defer, result, payload) {
 
     // start watching for confirmation depending on the support features of the provider
     var startWatching = function (existingReceipt) {
-        const startInterval = () => {
-            intervalId = setInterval(checkConfirmation.bind(null, existingReceipt, true), 1000);
-        };
-
-        if (!this.requestManager.provider.on) {
-            startInterval();
-        } else {
-            _ethereumCall.subscribe('newBlockHeaders', function (err, blockHeader, sub) {
-                if (err || !blockHeader) {
-                    // fall back to polling
-                    startInterval();
-                } else {
-                    checkConfirmation(existingReceipt, false, err, blockHeader, sub);
-                }
-            });
-        }
+        // The availability of function `this.requestManager.provider.on` can't provide guarantee
+        // for the support of "newBlockHeaders" event. Since this flow is very important to receive 
+        // transaction receipt so we will be utilizing ONLY pooling technique here. 
+        //  https://github.com/ChainSafe/web3.js/issues/3891#issuecomment-914409505
+        
+        intervalId = setInterval(checkConfirmation.bind(null, existingReceipt, true), 1000);
     }.bind(this);
 
 
